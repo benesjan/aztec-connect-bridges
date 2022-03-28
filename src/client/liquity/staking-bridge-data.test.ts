@@ -53,4 +53,16 @@ describe('staking bridge data', () => {
     expect(outputValueA).toBeGreaterThan(inputValue);
     expect(outputValueB).toBe(0n);
   });
+
+  it('should return non-zero market size', async () => {
+    const [assetValueA] = await stakingBridgeData.getMarketSize(
+      lqtyAsset,
+      emptyAsset,
+      sbAsset,
+      emptyAsset,
+      0n,
+    );
+
+    expect(assetValueA.amount).toBeGreaterThan(0n);
+  });
 });

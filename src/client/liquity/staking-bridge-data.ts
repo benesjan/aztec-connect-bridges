@@ -11,6 +11,7 @@ import {
 import { StakingBridge } from '../../../typechain-types';
 import { BigNumber, CallOverrides } from 'ethers';
 import { getLqtyApr } from './utils/lqty-apr';
+import { ethers } from 'hardhat';
 
 export class StakingBridgeData implements YieldBridgeData {
   private lqtyAddress = '0x6DEA81C8171D0bA574754EF6F8b412F2Ed88c54D';
@@ -103,6 +104,9 @@ export class StakingBridgeData implements YieldBridgeData {
     outputAssetB: AztecAsset,
     auxData: bigint,
   ): Promise<AssetValue[]> {
-    return [{ assetId: 0n, amount: 100n }];
+    const ERC20 = await ethers.getContractAt('ERC20', this.lqtyAddress);
+    const stakingContract = '0x4f9Fbb3f1E99B56e0Fe2892e623Ed36A76Fc605d';
+    const lqtyAmount = (await ERC20.balanceOf(stakingContract)).toBigInt();
+    return [{ assetId: 0n, amount: lqtyAmount }];
   }
 }
