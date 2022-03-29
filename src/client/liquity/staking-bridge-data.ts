@@ -1,17 +1,13 @@
+import { CallOverrides } from 'ethers';
+import { ethers } from 'hardhat';
+import { StakingBridge } from '../../../typechain-types';
 import {
   AssetValue,
   AuxDataConfig,
-  AztecAsset,
-  SolidityType,
-  BridgeData,
-  AztecAssetType,
-  YieldBridgeData,
+  AztecAsset, AztecAssetType, SolidityType, YieldBridgeData
 } from '../bridge-data';
-
-import { StakingBridge } from '../../../typechain-types';
-import { BigNumber, CallOverrides } from 'ethers';
 import { getLqtyApr } from './utils/lqty-apr';
-import { ethers } from 'hardhat';
+
 
 export class StakingBridgeData implements YieldBridgeData {
   private lqtyAddress = '0x6DEA81C8171D0bA574754EF6F8b412F2Ed88c54D';
@@ -97,6 +93,7 @@ export class StakingBridgeData implements YieldBridgeData {
     return [outputValue, 0n];
   }
 
+  // @notice: returns the amount of lqty staked
   async getMarketSize(
     inputAssetA: AztecAsset,
     inputAssetB: AztecAsset,

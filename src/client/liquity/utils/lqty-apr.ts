@@ -21,7 +21,7 @@ const blockClient = new ApolloClient({
   cache: new InMemoryCache(),
 });
 
-async function query(ql: any, client = liquityClient) {
+export async function query(ql: any, client = liquityClient) {
   let data = await client.query({
     query: gql(ql),
     fetchPolicy: 'cache-first',
@@ -166,12 +166,13 @@ async function getLiquityInfo(blocks: any) {
 }
 
 export async function getLqtyApr(): Promise<number> {
-  const [ethPrice, lqtyPrice] = await getEthAndLqtyPrices();
-  const blocks = await getBlocks();
-  const liquityInfo = await getLiquityInfo(blocks);
+  const blockPromise = getBlocks();
+  const ethLqtyPricePromise = getEthAndLqtyPrices();
+  const liquityInfo = await getLiquityInfo(await blockPromise);
 
   const borrowFeeDiff = liquityInfo[1].totalBorrowingFeesPaid - liquityInfo[0].totalBorrowingFeesPaid;
   const redemptionFeeDiff = liquityInfo[1].totalRedemptionFeesPaid - liquityInfo[0].totalRedemptionFeesPaid;
+  const [ethPrice, lqtyPrice] = await ethLqtyPricePromise;
   return (
     ((borrowFeeDiff + redemptionFeeDiff * ethPrice) / (liquityInfo[1].totalLQTYTokensStaked * lqtyPrice) / 7) * 365
   );
