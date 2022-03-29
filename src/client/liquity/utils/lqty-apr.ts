@@ -94,7 +94,7 @@ function getBlocksQuery(timestamps: any) {
   return queryString;
 }
 
-async function getEthAndLqtyPrices() {
+export async function getEthAndLqtyPrices() {
   const gql = `
     {
         pair(id:"0xb13201b48b1e61593df055576964d0b3aab66ea3")

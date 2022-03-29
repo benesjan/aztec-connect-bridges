@@ -1,16 +1,22 @@
-import { CallOverrides } from 'ethers';
 import { ethers } from 'hardhat';
-import { StakingBridge } from '../../../typechain-types';
-import { AssetValue, AuxDataConfig, AztecAsset, AztecAssetType, SolidityType, YieldBridgeData } from '../bridge-data';
+import { StabilityPoolBridge } from '../../../typechain-types';
+import {
+  AssetValue,
+  AuxDataConfig,
+  AztecAsset,
+  SolidityType, YieldBridgeData
+} from '../bridge-data';
 import { getLqtyApr } from './utils/lqty-apr';
+import { getLusdApr } from './utils/lusd-apr';
 
-export class StakingBridgeData implements YieldBridgeData {
-  private lqtyAddress = '0x6DEA81C8171D0bA574754EF6F8b412F2Ed88c54D';
 
-  private stakingBridge: StakingBridge;
+export class StabilityPoolBridgeData implements YieldBridgeData {
+  private lusdAddress = '0x5f98805A4E8be255a32880FDeC7F6728C6568bA0';
 
-  constructor(stakingBridge: StakingBridge) {
-    this.stakingBridge = stakingBridge;
+  private stabilityPoolBridge: StabilityPoolBridge;
+
+  constructor(stabilityPoolBridge: StabilityPoolBridge) {
+    this.stabilityPoolBridge = stabilityPoolBridge;
   }
 
   // @dev This function should be implemented for stateful bridges. It should return an array of AssetValue's
@@ -52,29 +58,12 @@ export class StakingBridgeData implements YieldBridgeData {
     auxData: bigint,
     inputValue: bigint,
   ): Promise<bigint[]> {
-    let overrides: CallOverrides = { from: await this.stakingBridge.processor() };
-
-    if (inputAssetA.erc20Address == this.lqtyAddress && outputAssetA.erc20Address == this.stakingBridge.address) {
-      // LQTY -> SB (StakingBridge token)
-      let [outputValueA, _] = await this.stakingBridge.callStatic.convert(
-        inputAssetA,
-        inputAssetB,
-        outputAssetA,
-        outputAssetB,
-        inputValue,
-        '0',
-        '0',
-        '0x0000000000000000000000000000000000000000',
-        overrides,
-      );
-      return [outputValueA.toBigInt(), 0n];
-    } else if (inputAssetA.erc20Address == this.stakingBridge.address && outputAssetA.assetType == AztecAssetType.ETH) {
-      // SB -> LQTY
-    }
-
     return [100n, 0n];
   }
 
+  // @notice: computes expected yearly output based on LQTY rewarded to the stability pool
+  // and amount of LUSD deposited. Gains from ETH liquidations are not considered because
+  // of unpredictability
   async getExpectedYearlyOuput(
     inputAssetA: AztecAsset,
     inputAssetB: AztecAsset,
@@ -83,12 +72,12 @@ export class StakingBridgeData implements YieldBridgeData {
     auxData: bigint,
     inputValue: bigint,
   ): Promise<bigint[]> {
-    const apr = await getLqtyApr();
+    const apr = await getLusdApr();
     const outputValue: bigint = inputValue + BigInt(Number(inputValue) * apr);
     return [outputValue, 0n];
   }
 
-  // @notice: returns the amount of lqty staked
+  // @notice: returns the amount of lusd deposited to the StabilityPool.sol
   async getMarketSize(
     inputAssetA: AztecAsset,
     inputAssetB: AztecAsset,
@@ -96,9 +85,9 @@ export class StakingBridgeData implements YieldBridgeData {
     outputAssetB: AztecAsset,
     auxData: bigint,
   ): Promise<AssetValue[]> {
-    const ERC20 = await ethers.getContractAt('ERC20', this.lqtyAddress);
-    const stakingContract = '0x4f9Fbb3f1E99B56e0Fe2892e623Ed36A76Fc605d';
-    const lqtyAmount = (await ERC20.balanceOf(stakingContract)).toBigInt();
-    return [{ assetId: 0n, amount: lqtyAmount }];
+    const ERC20 = await ethers.getContractAt('ERC20', this.lusdAddress);
+    const stabilityPoolContract = '0x66017D22b0f8556afDd19FC67041899Eb65a21bb';
+    const lusdAmount = (await ERC20.balanceOf(stabilityPoolContract)).toBigInt();
+    return [{ assetId: 0n, amount: lusdAmount }];
   }
 }
