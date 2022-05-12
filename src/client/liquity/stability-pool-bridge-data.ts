@@ -6,7 +6,6 @@ import {
   AztecAsset,
   SolidityType, YieldBridgeData
 } from '../bridge-data';
-import { getLqtyApr } from './utils/lqty-apr';
 import { getLusdApr } from './utils/lusd-apr';
 
 
